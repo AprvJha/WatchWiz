@@ -22,7 +22,6 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: Home },
   { label: 'Recommendation Engine', href: '/recommendations', icon: Clapperboard },
-  { label: 'Model Performance', href: '/analytics', icon: BarChart3 },
   { label: 'Dataset Explorer', href: '/dataset', icon: Database },
   { label: 'System Architecture', href: '/architecture', icon: Info },
 ];
