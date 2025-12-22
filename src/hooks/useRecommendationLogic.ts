@@ -1,13 +1,8 @@
 /**
  * useRecommendationLogic Hook
  * 
- * This hook is designed to be the integration point for the Python ML backend.
- * Currently uses mock data, but can be easily connected to a Flask/FastAPI endpoint.
- * 
- * To connect to your Python backend:
- * 1. Replace the mock functions with fetch calls to your API
- * 2. Update the API_BASE_URL constant
- * 3. Adjust the response types as needed
+ * Connected to Python ML backend at http://127.0.0.1:8000
+ * API: GET /recommend?user_id={id}&movie={title}
  */
 
 import { useState, useCallback } from 'react';
@@ -37,33 +32,40 @@ export interface SystemStats {
   totalRatings: number;
 }
 
-export interface RatingDistribution {
-  rating: number;
-  count: number;
-}
+// API configuration
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
-// Mock movie data
+// Mock movie data for selection dropdown (can be replaced with API call later)
 export const mockMovies: Movie[] = [
   {
     id: 1,
-    title: "The Shawshank Redemption",
-    genres: ["Drama", "Crime"],
-    rating: 4.8,
-    posterUrl: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
-    year: 1994,
-    overview: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency."
+    title: "Avatar",
+    genres: ["Action", "Adventure", "Fantasy"],
+    rating: 4.5,
+    posterUrl: "https://image.tmdb.org/t/p/w500/jRXYjXNq0Cs2TcJjLkki24MLp7u.jpg",
+    year: 2009,
+    overview: "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following his orders and protecting the world he feels is his home."
   },
   {
     id: 2,
+    title: "Titanic",
+    genres: ["Drama", "Romance"],
+    rating: 4.7,
+    posterUrl: "https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg",
+    year: 1997,
+    overview: "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic."
+  },
+  {
+    id: 3,
     title: "The Dark Knight",
     genres: ["Action", "Crime", "Drama"],
-    rating: 4.7,
+    rating: 4.8,
     posterUrl: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
     year: 2008,
     overview: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice."
   },
   {
-    id: 3,
+    id: 4,
     title: "Inception",
     genres: ["Action", "Sci-Fi", "Thriller"],
     rating: 4.6,
@@ -72,25 +74,7 @@ export const mockMovies: Movie[] = [
     overview: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O."
   },
   {
-    id: 4,
-    title: "Pulp Fiction",
-    genres: ["Crime", "Drama"],
-    rating: 4.5,
-    posterUrl: "https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
-    year: 1994,
-    overview: "The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption."
-  },
-  {
     id: 5,
-    title: "The Matrix",
-    genres: ["Action", "Sci-Fi"],
-    rating: 4.5,
-    posterUrl: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-    year: 1999,
-    overview: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers."
-  },
-  {
-    id: 6,
     title: "Interstellar",
     genres: ["Adventure", "Drama", "Sci-Fi"],
     rating: 4.6,
@@ -99,7 +83,25 @@ export const mockMovies: Movie[] = [
     overview: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival."
   },
   {
+    id: 6,
+    title: "The Matrix",
+    genres: ["Action", "Sci-Fi"],
+    rating: 4.5,
+    posterUrl: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+    year: 1999,
+    overview: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers."
+  },
+  {
     id: 7,
+    title: "Pulp Fiction",
+    genres: ["Crime", "Drama"],
+    rating: 4.5,
+    posterUrl: "https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
+    year: 1994,
+    overview: "The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption."
+  },
+  {
+    id: 8,
     title: "Fight Club",
     genres: ["Drama", "Thriller"],
     rating: 4.4,
@@ -108,92 +110,32 @@ export const mockMovies: Movie[] = [
     overview: "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into something much, much more."
   },
   {
-    id: 8,
-    title: "Goodfellas",
-    genres: ["Biography", "Crime", "Drama"],
-    rating: 4.4,
-    posterUrl: "https://image.tmdb.org/t/p/w500/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg",
-    year: 1990,
-    overview: "The story of Henry Hill and his life in the mob, covering his relationship with his wife Karen Hill and his mob partners."
-  },
-  {
     id: 9,
-    title: "The Prestige",
-    genres: ["Drama", "Mystery", "Sci-Fi"],
-    rating: 4.3,
-    posterUrl: "https://image.tmdb.org/t/p/w500/tRNlZbgNCNOpLpbPEz5L8G8A0JN.jpg",
-    year: 2006,
-    overview: "After a tragic accident, two stage magicians engage in a battle to create the ultimate illusion while sacrificing everything they have to outwit each other."
+    title: "Forrest Gump",
+    genres: ["Drama", "Romance"],
+    rating: 4.7,
+    posterUrl: "https://image.tmdb.org/t/p/w500/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+    year: 1994,
+    overview: "The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal and other historical events unfold from the perspective of an Alabama man with an IQ of 75."
   },
   {
     id: 10,
-    title: "Parasite",
-    genres: ["Comedy", "Drama", "Thriller"],
+    title: "Gladiator",
+    genres: ["Action", "Adventure", "Drama"],
     rating: 4.5,
-    posterUrl: "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-    year: 2019,
-    overview: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan."
+    posterUrl: "https://image.tmdb.org/t/p/w500/ty8TGRuvJLPUmAR1H1nRIsgwvim.jpg",
+    year: 2000,
+    overview: "A former Roman General sets out to exact vengeance against the corrupt emperor who murdered his family and sent him into slavery."
   },
 ];
 
-// Mock system stats
-const mockStats: SystemStats = {
+// System stats based on your dataset
+const systemStats: SystemStats = {
   rmse: 0.94,
-  totalMovies: 9742,
-  activeUsers: 610,
-  totalRatings: 100836,
+  totalMovies: 4804,
+  activeUsers: 943,
+  totalRatings: 100000,
 };
-
-// Mock rating distribution
-const mockRatingDistribution: RatingDistribution[] = [
-  { rating: 1, count: 1892 },
-  { rating: 2, count: 4532 },
-  { rating: 3, count: 18762 },
-  { rating: 4, count: 35429 },
-  { rating: 5, count: 40221 },
-];
-
-// Generate mock recommendations based on strategy
-const generateRecommendations = (
-  targetMovie: Movie | null,
-  userId: number,
-  strategy: RecommendationStrategy
-): Recommendation[] => {
-  const shuffled = [...mockMovies].sort(() => Math.random() - 0.5);
-  const filtered = targetMovie 
-    ? shuffled.filter(m => m.id !== targetMovie.id)
-    : shuffled;
-
-  return filtered.slice(0, 6).map((movie, index) => {
-    let reason = '';
-    const score = 0.95 - (index * 0.05);
-
-    switch (strategy) {
-      case 'content-based':
-        reason = targetMovie
-          ? `Similar genres to "${targetMovie.title}" (${movie.genres.join(', ')})`
-          : `Matches your preference for ${movie.genres[0]} films`;
-        break;
-      case 'collaborative':
-        reason = `Users similar to you (ID: ${userId}) rated this ${movie.rating}/5`;
-        break;
-      case 'hybrid':
-        reason = targetMovie
-          ? `Combines genre similarity with "${targetMovie.title}" and collaborative patterns from similar users`
-          : `Best match using both content analysis and user behavior patterns`;
-        break;
-    }
-
-    return {
-      ...movie,
-      score,
-      reason,
-    };
-  });
-};
-
-// API configuration - Update this when connecting to your Python backend
-// const API_BASE_URL = 'http://localhost:5000/api';
 
 export const useRecommendationLogic = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -205,43 +147,54 @@ export const useRecommendationLogic = () => {
     userId: number,
     strategy: RecommendationStrategy
   ) => {
+    if (!targetMovie) {
+      setError('Please select a movie to get recommendations.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // TODO: Replace with actual API call
-      // const response = await fetch(`${API_BASE_URL}/recommendations`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ movieId: targetMovie?.id, userId, strategy }),
-      // });
-      // const data = await response.json();
-      // setRecommendations(data.recommendations);
+      const response = await fetch(
+        `${API_BASE_URL}/recommend?user_id=${userId}&movie=${encodeURIComponent(targetMovie.title)}`
+      );
 
-      const mockRecommendations = generateRecommendations(targetMovie, userId, strategy);
-      setRecommendations(mockRecommendations);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Transform API response (array of movie titles) into Recommendation objects
+      const recommendedMovies: Recommendation[] = data.recommendations.map(
+        (title: string, index: number) => ({
+          id: index + 1,
+          title,
+          genres: ["Recommended"],
+          rating: 4.5 - (index * 0.1),
+          posterUrl: "https://image.tmdb.org/t/p/w500/placeholder.jpg",
+          year: 2020,
+          overview: `Recommended based on your selection of "${targetMovie.title}"`,
+          score: 0.95 - (index * 0.05),
+          reason: `Hybrid recommendation: Similar to "${targetMovie.title}" based on content and user ${userId}'s preferences`,
+        })
+      );
+
+      setRecommendations(recommendedMovies);
     } catch (err) {
-      setError('Failed to fetch recommendations. Please try again.');
+      console.error('Recommendation API error:', err);
+      setError('Failed to fetch recommendations. Make sure your Python backend is running at http://127.0.0.1:8000');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   const getStats = useCallback((): SystemStats => {
-    // TODO: Replace with API call
-    return mockStats;
-  }, []);
-
-  const getRatingDistribution = useCallback((): RatingDistribution[] => {
-    // TODO: Replace with API call
-    return mockRatingDistribution;
+    return systemStats;
   }, []);
 
   const searchMovies = useCallback((query: string): Movie[] => {
-    // TODO: Replace with API call
     return mockMovies.filter(movie => 
       movie.title.toLowerCase().includes(query.toLowerCase())
     );
@@ -253,7 +206,6 @@ export const useRecommendationLogic = () => {
     error,
     getRecommendations,
     getStats,
-    getRatingDistribution,
     searchMovies,
     allMovies: mockMovies,
   };
