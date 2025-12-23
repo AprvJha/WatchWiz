@@ -8,7 +8,8 @@ const Recommendations = () => {
     allMovies, 
     recommendations, 
     isLoading, 
-    getRecommendations 
+    getRecommendations,
+    moviesLoaded 
   } = useRecommendationLogic();
 
   return (
@@ -30,8 +31,11 @@ const Recommendations = () => {
           <RecommendationForm 
             movies={allMovies} 
             onSubmit={getRecommendations}
-            isLoading={isLoading}
+            isLoading={isLoading || !moviesLoaded}
           />
+          {!moviesLoaded && (
+            <p className="text-sm text-muted-foreground mt-2">Loading {allMovies.length > 0 ? allMovies.length : ''} movies...</p>
+          )}
         </div>
 
         {/* Results Section */}

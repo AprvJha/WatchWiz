@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { MovieCard } from './MovieCard';
 import { Recommendation, Movie } from '@/hooks/useRecommendationLogic';
 import { Loader2 } from 'lucide-react';
@@ -9,12 +10,12 @@ interface MovieGridProps {
   emptyMessage?: string;
 }
 
-export const MovieGrid = ({ 
+export const MovieGrid = forwardRef<HTMLDivElement, MovieGridProps>(({ 
   movies, 
   isLoading = false, 
   showScore = false,
   emptyMessage = "No movies found"
-}: MovieGridProps) => {
+}, ref) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -40,7 +41,7 @@ export const MovieGrid = ({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+    <div ref={ref} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
       {movies.map((movie, index) => (
         <MovieCard 
           key={movie.id} 
@@ -51,4 +52,6 @@ export const MovieGrid = ({
       ))}
     </div>
   );
-};
+});
+
+MovieGrid.displayName = 'MovieGrid';
