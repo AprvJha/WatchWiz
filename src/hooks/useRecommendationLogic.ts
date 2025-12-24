@@ -45,54 +45,6 @@ const systemStats: SystemStats = {
   totalRatings: 100000,
 };
 
-// Generate mock recommendations based on similar genres
-function generateMockRecommendations(
-  targetMovie: Movie,
-  allMovies: Movie[],
-  strategy: RecommendationStrategy,
-  userId: number
-): Recommendation[] {
-  // Filter out the target movie and find movies with similar genres
-  const otherMovies = allMovies.filter(m => m.id !== targetMovie.id);
-  
-  // Score movies based on genre similarity
-  const scoredMovies = otherMovies.map(movie => {
-    const sharedGenres = movie.genres.filter(g => targetMovie.genres.includes(g));
-    const genreScore = sharedGenres.length / Math.max(targetMovie.genres.length, 1);
-    const ratingScore = movie.rating / 10;
-    
-    // Different scoring based on strategy
-    let finalScore: number;
-    switch (strategy) {
-      case 'content-based':
-        finalScore = genreScore * 0.8 + ratingScore * 0.2;
-        break;
-      case 'collaborative':
-        // Simulate user preference with some randomness based on userId
-        const userPref = ((userId * movie.id) % 100) / 100;
-        finalScore = ratingScore * 0.5 + userPref * 0.5;
-        break;
-      case 'hybrid':
-      default:
-        const hybridUserPref = ((userId * movie.id) % 100) / 100;
-        finalScore = genreScore * 0.4 + ratingScore * 0.3 + hybridUserPref * 0.3;
-        break;
-    }
-    
-    return { movie, score: finalScore };
-  });
-  
-  // Sort by score and take top 10
-  const topMovies = scoredMovies
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 10);
-  
-  return topMovies.map(({ movie, score }, index) => ({
-    ...movie,
-    score: Math.round(score * 100) / 100,
-    reason: `${strategy === 'content-based' ? 'Content-based' : strategy === 'collaborative' ? 'Collaborative' : 'Hybrid'} recommendation: Similar to "${targetMovie.title}"${strategy !== 'content-based' ? ` based on user ${userId}'s preferences` : ''}`,
-  }));
-}
 
 export const useRecommendationLogic = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -157,15 +109,9 @@ export const useRecommendationLogic = () => {
 
       setRecommendations(recommendedMovies);
     } catch (err) {
-      console.log('Backend unavailable, using mock recommendations');
-      
-      // Generate mock recommendations from CSV data
-      if (allMovies.length > 0) {
-        const mockRecs = generateMockRecommendations(targetMovie, allMovies, strategy, userId);
-        setRecommendations(mockRecs);
-      } else {
-        setError('Failed to load movie data. Please refresh the page.');
-      }
+      console.error('Backend unavailable:', err);
+      setRecommendations([]);
+      setError('The recommendation backend is currently unavailable. Please ensure the Python ML server is running at http://127.0.0.1:8000');
     } finally {
       setIsLoading(false);
     }

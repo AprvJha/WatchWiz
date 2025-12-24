@@ -1,15 +1,21 @@
-import { useState } from 'react';
-import { Search, User, Sparkles } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { Search, User, Sparkles, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Movie, RecommendationStrategy } from '@/hooks/useRecommendationLogic';
 import { cn } from '@/lib/utils';
@@ -42,13 +48,30 @@ export const RecommendationForm = ({ movies, onSubmit, isLoading }: Recommendati
   const [selectedMovieId, setSelectedMovieId] = useState<string>('');
   const [userId, setUserId] = useState<string>('1');
   const [strategy, setStrategy] = useState<RecommendationStrategy>('hybrid');
+  const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredMovies = movies.filter(movie =>
-    movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+  // Memoized filtered movies - only filter when search query changes
+  const filteredMovies = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return movies.slice(0, 100); // Show first 100 when no search
+    }
+    const query = searchQuery.toLowerCase();
+    return movies.filter(movie =>
+      movie.title.toLowerCase().includes(query)
+    ).slice(0, 100); // Limit results for performance
+  }, [movies, searchQuery]);
+
+  const selectedMovie = useMemo(() => 
+    movies.find(m => m.id.toString() === selectedMovieId) || null,
+    [movies, selectedMovieId]
   );
 
-  const selectedMovie = movies.find(m => m.id.toString() === selectedMovieId) || null;
+  const handleMovieSelect = useCallback((movieId: string) => {
+    setSelectedMovieId(movieId);
+    setOpen(false);
+    setSearchQuery('');
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,35 +89,63 @@ export const RecommendationForm = ({ movies, onSubmit, isLoading }: Recommendati
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Movie Selection */}
+          {/* Movie Selection - Using Command for better performance */}
           <div className="space-y-2">
-            <Label htmlFor="movie" className="text-foreground">Target Movie (Optional)</Label>
-            <Select value={selectedMovieId} onValueChange={setSelectedMovieId}>
-              <SelectTrigger className="bg-secondary border-border">
-                <SelectValue placeholder="Select a movie..." />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border max-h-[300px]">
-                <div className="p-2 sticky top-0 bg-card">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search movies..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 bg-secondary border-border"
-                    />
-                  </div>
-                </div>
-                {filteredMovies.map((movie) => (
-                  <SelectItem key={movie.id} value={movie.id.toString()}>
-                    <span className="flex items-center gap-2">
-                      <span>{movie.title}</span>
-                      <span className="text-muted-foreground text-xs">({movie.year})</span>
+            <Label htmlFor="movie" className="text-foreground">Target Movie</Label>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between bg-secondary border-border hover:bg-secondary/80"
+                >
+                  {selectedMovie ? (
+                    <span className="flex items-center gap-2 truncate">
+                      <Film className="h-4 w-4 shrink-0 text-primary" />
+                      <span className="truncate">{selectedMovie.title}</span>
+                      <span className="text-muted-foreground text-xs shrink-0">({selectedMovie.year})</span>
                     </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  ) : (
+                    <span className="text-muted-foreground">Search from {movies.length.toLocaleString()} movies...</span>
+                  )}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command shouldFilter={false}>
+                  <CommandInput 
+                    placeholder="Type to search movies..." 
+                    value={searchQuery}
+                    onValueChange={setSearchQuery}
+                  />
+                  <CommandList className="max-h-[300px]">
+                    <CommandEmpty>
+                      {searchQuery ? 'No movies found.' : 'Type to search...'}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {filteredMovies.map((movie) => (
+                        <CommandItem
+                          key={movie.id}
+                          value={movie.id.toString()}
+                          onSelect={handleMovieSelect}
+                          className="cursor-pointer"
+                        >
+                          <Film className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <span className="flex-1 truncate">{movie.title}</span>
+                          <span className="text-muted-foreground text-xs ml-2">({movie.year})</span>
+                        </CommandItem>
+                      ))}
+                      {!searchQuery && movies.length > 100 && (
+                        <div className="py-2 px-3 text-xs text-muted-foreground text-center">
+                          Type to search all {movies.length.toLocaleString()} movies
+                        </div>
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* User ID */}
