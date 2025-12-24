@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { HeroSection } from '@/components/dashboard/HeroSection';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { TechStackBadges } from '@/components/dashboard/TechStackBadges';
 import { MovieGrid } from '@/components/movies/MovieGrid';
-import { loadMoviesFromCSV, Movie, isMoviesCached, getCachedMovies } from '@/lib/movieData';
+import { loadMoviesFromCSV, Movie, isMoviesCached, getCachedMovies, fetchMoviePosters } from '@/lib/movieData';
 import { Activity, Film, Users, Star } from 'lucide-react';
 
 // Static system stats - no need to compute
@@ -23,15 +23,26 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(!isMoviesCached());
 
   useEffect(() => {
-    // Skip if already have featured movies
-    if (featuredMovies.length > 0) return;
+    // Skip if already have featured movies with posters
+    if (featuredMovies.length > 0 && featuredMovies[0].posterUrl) return;
     
-    loadMoviesFromCSV().then((movies) => {
-      // Only take first 12 for featured section
-      setFeaturedMovies(movies.slice(0, 12));
+    loadMoviesFromCSV().then(async (movies) => {
+      const featured = movies.slice(0, 12);
+      
+      // Fetch posters for featured movies
+      const movieIds = featured.map(m => m.id);
+      const posterMap = await fetchMoviePosters(movieIds);
+      
+      // Update movies with poster URLs
+      const moviesWithPosters = featured.map(movie => ({
+        ...movie,
+        posterUrl: posterMap.get(movie.id) || movie.posterUrl,
+      }));
+      
+      setFeaturedMovies(moviesWithPosters);
       setIsLoading(false);
     });
-  }, [featuredMovies.length]);
+  }, [featuredMovies]);
 
   return (
     <MainLayout>
