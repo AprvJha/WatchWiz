@@ -48,7 +48,7 @@ const Dataset = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Fetch posters for visible movies
+  // Fetch posters for visible movies - using refs to avoid dependency issues
   useEffect(() => {
     const movieIdsToFetch = paginatedMovies
       .filter((m) => !posterCache.has(m.id) && !loadingPosters.has(m.id))
@@ -56,6 +56,7 @@ const Dataset = () => {
 
     if (movieIdsToFetch.length === 0) return;
 
+    // Mark as loading
     setLoadingPosters((prev) => {
       const next = new Set(prev);
       movieIdsToFetch.forEach((id) => next.add(id));
@@ -74,7 +75,9 @@ const Dataset = () => {
         return next;
       });
     });
-  }, [paginatedMovies, posterCache, loadingPosters]);
+    // Only trigger when paginated movie IDs change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginatedMovies.map(m => m.id).join(',')]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
