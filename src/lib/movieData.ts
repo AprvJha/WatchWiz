@@ -1,5 +1,6 @@
 /**
  * Movie data utilities for parsing CSV dataset
+ * Includes module-level caching to prevent redundant fetches
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,10 @@ export interface Movie {
   year: number;
   overview: string;
 }
+
+// Module-level cache for movies
+let cachedMovies: Movie[] | null = null;
+let loadingPromise: Promise<Movie[]> | null = null;
 
 // Parse genres from JSON-like string format in CSV
 function parseGenres(genreString: string): string[] {
@@ -61,7 +66,7 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
-export async function loadMoviesFromCSV(): Promise<Movie[]> {
+async function fetchAndParseCSV(): Promise<Movie[]> {
   try {
     const response = await fetch('/data/movies.csv');
     const text = await response.text();
@@ -107,6 +112,38 @@ export async function loadMoviesFromCSV(): Promise<Movie[]> {
     console.error('Error loading movies CSV:', error);
     return [];
   }
+}
+
+// Cached loader - returns cached data or fetches once
+export async function loadMoviesFromCSV(): Promise<Movie[]> {
+  // Return cached movies if available
+  if (cachedMovies) {
+    return cachedMovies;
+  }
+  
+  // If already loading, wait for that promise
+  if (loadingPromise) {
+    return loadingPromise;
+  }
+  
+  // Start loading and cache the promise
+  loadingPromise = fetchAndParseCSV().then(movies => {
+    cachedMovies = movies;
+    loadingPromise = null;
+    return movies;
+  });
+  
+  return loadingPromise;
+}
+
+// Get cached movies synchronously (returns empty if not loaded yet)
+export function getCachedMovies(): Movie[] {
+  return cachedMovies || [];
+}
+
+// Check if movies are already cached
+export function isMoviesCached(): boolean {
+  return cachedMovies !== null;
 }
 
 // Fetch poster URLs from TMDB via edge function
