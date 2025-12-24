@@ -1,14 +1,37 @@
+import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { HeroSection } from '@/components/dashboard/HeroSection';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { TechStackBadges } from '@/components/dashboard/TechStackBadges';
 import { MovieGrid } from '@/components/movies/MovieGrid';
-import { useRecommendationLogic } from '@/hooks/useRecommendationLogic';
+import { loadMoviesFromCSV, Movie, isMoviesCached, getCachedMovies } from '@/lib/movieData';
 import { Activity, Film, Users, Star } from 'lucide-react';
 
+// Static system stats - no need to compute
+const stats = {
+  rmse: 0.94,
+  totalMovies: 4804,
+  activeUsers: 943,
+  totalRatings: 100000,
+};
+
 const Index = () => {
-  const { allMovies, getStats } = useRecommendationLogic();
-  const stats = getStats();
+  const [featuredMovies, setFeaturedMovies] = useState<Movie[]>(() => {
+    // Use cached data if available for instant render
+    return isMoviesCached() ? getCachedMovies().slice(0, 12) : [];
+  });
+  const [isLoading, setIsLoading] = useState(!isMoviesCached());
+
+  useEffect(() => {
+    // Skip if already have featured movies
+    if (featuredMovies.length > 0) return;
+    
+    loadMoviesFromCSV().then((movies) => {
+      // Only take first 12 for featured section
+      setFeaturedMovies(movies.slice(0, 12));
+      setIsLoading(false);
+    });
+  }, [featuredMovies.length]);
 
   return (
     <MainLayout>
@@ -69,7 +92,7 @@ const Index = () => {
               </p>
             </div>
           </div>
-          <MovieGrid movies={allMovies} />
+          <MovieGrid movies={featuredMovies} isLoading={isLoading} />
         </div>
       </section>
 
