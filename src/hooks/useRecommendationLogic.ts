@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { loadMoviesFromCSV, Movie as CSVMovieType } from '@/lib/movieData';
+import { loadMoviesFromCSV, Movie as CSVMovieType, fetchMoviePosters } from '@/lib/movieData';
 
 // Types for the recommendation system
 export interface Movie {
@@ -107,7 +107,17 @@ export const useRecommendationLogic = () => {
         }
       );
 
-      setRecommendations(recommendedMovies);
+      // Fetch posters for recommended movies
+      const movieIds = recommendedMovies.map(m => m.id).filter(id => id > 0);
+      const posterMap = await fetchMoviePosters(movieIds);
+      
+      // Update recommendations with poster URLs
+      const moviesWithPosters = recommendedMovies.map(movie => ({
+        ...movie,
+        posterUrl: posterMap.get(movie.id) || movie.posterUrl,
+      }));
+
+      setRecommendations(moviesWithPosters);
     } catch (err) {
       console.error('Backend unavailable:', err);
       setRecommendations([]);
