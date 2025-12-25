@@ -105,7 +105,7 @@ This project is trained on the following open-source datasets:
 1. MovieLens 100K Dataset: Used for Collaborative Filtering (User-Movie Matrix).
 2. TMDB 5000 Movies Dataset: Used for Content-Based Filtering (Metadata, Genres, Cast).
 
-# Note on Large Files: Due to GitHub file size limitations, the trained .pkl model files and large CSV datasets are not tracked in this repository. Please refer to backend/models/README.md for instructions on how to regenerate the models locally using the provided source code.
+**Note on Large Files:** Due to GitHub file size limitations, the trained .pkl model files and large CSV datasets are not tracked in this repository. Please refer to backend/models/README.md for instructions on how to regenerate the models locally using the provided source code.
 
 ## 🎓 Academic Notes
 This project serves as a practical demonstration of:
