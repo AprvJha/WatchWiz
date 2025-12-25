@@ -1,103 +1,88 @@
-🎬 CineMatch — Hybrid Movie Recommendation System
+# 🎬 CineMatch — Hybrid Movie Recommendation System
 
-CineMatch is a Hybrid Movie Recommendation System that delivers personalized movie recommendations by combining
-Content-Based Filtering and Collaborative Filtering (SVD).
-The system uses real-world datasets and a Python-based machine learning backend, integrated with a modern React frontend.
+**CineMatch** is a robust Hybrid Movie Recommendation System that delivers personalised movie suggestions by seamlessly combining **Content-Based Filtering** and **Collaborative Filtering (SVD)**. 
 
-🚀 Key Features
+The system utilises real-world datasets (MovieLens & TMDB), a Python-based machine learning backend for inference, and a modern, responsive React frontend for visualisation.
 
-🎯 Hybrid Recommendation Engine
+---
 
-Content-based filtering using TF-IDF and cosine similarity
+## 🚀 Key Features
 
-Collaborative filtering using SVD (matrix factorization)
+* **🎯 Hybrid Recommendation Engine:**
+    * **Content-Based:** TF-IDF Vectorization & Cosine Similarity.
+    * **Collaborative:** Matrix Factorisation using SVD (Singular Value Decomposition).
+* **⚡ Real-Time Inference:** High-performance API built with **FastAPI**.
+* **🎨 Modern UI:** A responsive interface crafted with **React, Vite, Tailwind CSS, and shadcn/ui**.
+* **📊 Performance Metrics:** Evaluated using RMSE (Root Mean Squared Error).
+* **🧪 Real-World Data:** Trained on the **MovieLens 100K** and **TMDB 5000** datasets.
+* **🔗 Full Integration:** No mock data—all recommendations are computed dynamically.
 
-👤 User-personalized recommendations
+---
 
-⚡ FastAPI backend for real-time ML inference
+## 🧠 System Architecture
 
-🎨 Modern UI built with React, Vite, Tailwind CSS, and shadcn/ui
+The application follows a client-server architecture where the frontend communicates with the backend via RESTful API calls.
 
-📊 Model evaluation using RMSE
-
-🧪 Trained on real-world MovieLens and TMDB datasets
-
-🔗 Fully integrated frontend and backend (no mock data)
-
-🧠 System Architecture
-Frontend (React + Vite)
-        |
-        |  HTTP API Call
-        v
-Backend (FastAPI)
-        |
-        |  Hybrid Recommendation Logic
-        v
-Content-Based Filtering + Collaborative Filtering (SVD)
-
-
-The frontend handles user interaction and visualization.
-
-The backend performs all recommendation computations using trained ML models.
-
-📁 Project Structure
-cinema-ai/
-├── backend/        # Python ML backend
-│   ├── api.py
-│   ├── hybrid.py
-│   ├── requirements.txt
-│   ├── models/
-│   │   └── README.md
-│   └── data/
-│       └── README.md
+```mermaid
+graph TD
+    A[Frontend (React + Vite)] -->|HTTP GET /recommend| B[Backend (FastAPI)]
+    B --> C{Hybrid Logic}
+    C -->|Metadata Matching| D[Content-Based (TF-IDF)]
+    C -->|User Patterns| E[Collaborative (SVD)]
+    D & E --> F[Weighted Hybrid Score]
+    F -->|JSON Response| A
+```
+##🔧 Tech Stack
+# Backend
+ComponentTechnologyFrameworkPython, FastAPIData ProcessingPandas, NumPyMachine LearningScikit-learn, Surprise (SVD)ServerUvicornFrontendComponentTechnologyFrameworkReact (Vite)LanguageTypeScriptStylingTailwind CSS, shadcn/ui📁 Project StructureBashcinema-ai/
+├── backend/                # Python ML backend
+│   ├── api.py              # FastAPI entry point
+│   ├── hybrid.py           # Recommendation logic class
+│   ├── requirements.txt    # Python dependencies
+│   ├── models/             # Serialised .pkl files (see README inside)
+│   └── data/               # Dataset files (see README inside)
 │
-├── src/            # React frontend source code
-├── public/         # Static frontend assets
+├── src/                    # React frontend source code
+├── public/                 # Static frontend assets
 ├── index.html
 ├── package.json
-└── README.md       # This file
+└── README.md               # Main documentation
+## ▶️ Getting Started
+#1. Backend Setup (Python): 
+Navigate to the backend directory and install the necessary dependencies.
 
-🧩 Backend Details
-🔧 Tech Stack
-
-Python
-
-FastAPI
-
-Pandas, NumPy
-
-Scikit-learn
-
-Surprise (SVD)
-
-▶️ How to Run Backend
 cd backend
 pip install -r requirements.txt
+
+Run the FastAPI server:
+
 uvicorn api:app --reload
 
+The backend will start at: http://127.0.0.1:80002. 
 
-Backend runs at:
+## Frontend Setup (React)
+Open a new terminal, navigate to the root (or src), and install dependencies.
 
-http://127.0.0.1:8000
+npm install
 
-📡 API Endpoint
-Get Movie Recommendations
-GET /recommend
+Run the development server:
 
+npm run dev
 
-Query Parameters
+The frontend will start at: http://localhost:8080 (or the port specified by Vite).
 
-user_id → User ID from MovieLens dataset
+##📡 API Reference
+#Get Recommendations
+Endpoint: GET /recommend
+# Query Parameters:
+user_id (int): The ID of the user (from MovieLens dataset).
+movie (string): The title of the movie the user is currently viewing/interested in.
 
-movie → Movie title selected by the user
+Example Request:
 
-Example Request
+GET [http://127.0.0.1:8000/recommend?user_id=1&movie=Avatar](http://127.0.0.1:8000/recommend?user_id=1&movie=Avatar)
 
-http://127.0.0.1:8000/recommend?user_id=1&movie=Avatar
-
-
-Example Response
-
+Example Response:
 {
   "recommendations": [
     "Aliens",
@@ -108,78 +93,22 @@ Example Response
   ]
 }
 
-🎨 Frontend Details
-🔧 Tech Stack
+## 📊 Model Performance
+We evaluate our model using RMSE (Root Mean Squared Error) to ensure recommendation accuracy.
 
-React
+RMSE~0.94
 
-Vite
+Indicates predicted ratings differ from actual user ratings by less than 1 star on average.
 
-TypeScript
+##📦 Datasets
+This project is trained on the following open-source datasets:
+1. MovieLens 100K Dataset: Used for Collaborative Filtering (User-Movie Matrix).
+2. TMDB 5000 Movies Dataset: Used for Content-Based Filtering (Metadata, Genres, Cast).
 
-Tailwind CSS
+# Note on Large Files: Due to GitHub file size limitations, the trained .pkl model files and large CSV datasets are not tracked in this repository. Please refer to backend/models/README.md for instructions on how to regenerate the models locally using the provided source code.
 
-shadcn/ui
-
-▶️ How to Run Frontend
-npm install
-npm run dev
-
-
-Frontend runs at:
-
-http://localhost:8080
-
-📊 Model Accuracy
-
-Metric: RMSE (Root Mean Squared Error)
-
-Value: ~0.94
-
-An RMSE below 1 indicates that the predicted ratings differ from actual ratings by less than one star on average, which is considered good performance for sparse recommendation datasets.
-
-📦 Datasets Used
-
-This project is trained and evaluated using real datasets only.
-
-🎞 MovieLens 100K Dataset
-
-Used for collaborative filtering (user–movie ratings)
-
-Source:
-https://www.kaggle.com/datasets/prajitdatta/movielens-100k-dataset
-
-🎬 TMDB 5000 Movies Dataset
-
-Used for content-based filtering (movie metadata)
-
-Includes movie overviews, genres, cast, crew, and keywords
-
-Source:
-https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata/data
-
-📦 Model & Data Files
-
-Trained model files (.pkl) and large datasets are not included in the repository due to GitHub file size limitations.
-
-All source code required to recreate the models locally is provided.
-
-Refer to:
-
-backend/models/README.md
-
-backend/data/README.md
-
-🎓 Academic Notes
-
-This project demonstrates:
-
-Real-world recommendation system design
-
-Hybrid machine learning approach
-
-Frontend–backend integration
-
-All recommendations are generated using trained ML models
-
-No mock data is used in either backend or frontend
+## 🎓 Academic Notes
+This project serves as a practical demonstration of:
+1. Hybrid Systems: Overcoming the "Cold Start" problem by combining two filtering methods.
+2. System Design: Decoupling ML computation (Backend) from User Interface (Frontend).
+3. Deployment Readiness: Using production-ready frameworks (FastAPI) rather than notebook scripts.
