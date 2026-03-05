@@ -2,6 +2,7 @@ pandas
 numpy
 scikit-learn
 nltk
-scikit-surprise
-streamlit
+scikit-surprise==1.1.4
 pickle-mixin
+fastapi
+uvicorn
