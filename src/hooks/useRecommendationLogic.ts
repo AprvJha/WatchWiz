@@ -35,7 +35,7 @@ export interface SystemStats {
 }
 
 // API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cinematch-wwbr.onrender.com';
 
 // System stats based on your dataset
 const systemStats: SystemStats = {
