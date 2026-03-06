@@ -4,6 +4,8 @@
 
 The system utilises real-world datasets (MovieLens & TMDB), a Python-based machine learning backend for inference, and a modern, responsive React frontend for visualisation.
 
+Frontend URL: https://watchwiz.lovable.app/
+Backend URL: https://cinematch-wwbr.onrender.com/
 ---
 
 ## 🚀 Key Features
